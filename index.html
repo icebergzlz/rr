@@ -291,9 +291,19 @@ main{
 /* ---------- 标题屏 ---------- */
 #titleScreen{
   position:fixed; inset:0; z-index:600; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:18px;
-  background:radial-gradient(900px 600px at 50% 30%, #6b2b4d, #2b1220 75%);
+  align-items:center; justify-content:flex-start; gap:18px;
+  padding-top:14vh; background:#2b1220;
 }
+#titleSceneWrap{position:absolute; inset:0; overflow:hidden;}
+#titleScene{
+  position:absolute; left:50%; bottom:-6px; width:375px; height:236px;
+  transform:translateX(-50%); transform-origin:center bottom;
+}
+.t-shade{
+  position:absolute; inset:0;
+  background:linear-gradient(180deg, #2b1220f5 0%, #3b1a2ecc 48%, #2b122055 78%, #1c0b1633 100%);
+}
+#titleScreen .t-logo,#titleScreen .t-sub,#titleScreen .t-btn{position:relative; z-index:2;}
 #titleScreen .t-logo{font-size:min(15vw,64px); font-weight:900; letter-spacing:10px;
   background:linear-gradient(90deg,#ffd9e8,var(--gold),#ff8fab);
   -webkit-background-clip:text; background-clip:text; color:transparent;
@@ -538,6 +548,8 @@ main{
 
 <!-- 标题屏 -->
 <div id="titleScreen">
+  <div id="titleSceneWrap"></div>
+  <div class="t-shade"></div>
   <div class="t-logo">浪漫餐厅</div>
   <div class="t-sub">—— 暖 屋 物 语 ——</div>
   <button class="btn t-btn" id="btnStart">🏮 开始经营</button>
@@ -988,11 +1000,13 @@ function renderScene(reveal){
   }
   if(S.decor.finale && !fwTimer){
     fwTimer=setInterval(()=>{
-      const fw=document.createElement('span');
-      fw.className='fw'; fw.textContent=pick(['🎆','✨','🎇']);
-      fw.style.left=(8+rnd(84))+'%';
-      $('#scene').appendChild(fw);
-      setTimeout(()=>fw.remove(),2300);
+      document.querySelectorAll('#scene,#titleScene').forEach(el=>{
+        const fw=document.createElement('span');
+        fw.className='fw'; fw.textContent=pick(['🎆','✨','🎇']);
+        fw.style.left=(8+rnd(84))+'%';
+        el.appendChild(fw);
+        setTimeout(()=>fw.remove(),2300);
+      });
     },1100);
   }
 }
@@ -1173,6 +1187,31 @@ $('#mbDecor').addEventListener('click',()=>{ renderSide(); renderScene(); $('#de
 window.addEventListener('resize', relayout);
 window.addEventListener('orientationchange', ()=>setTimeout(relayout,150));
 
+/* 标题屏：用当前餐厅实景做背景 */
+function buildTitleBackdrop(){
+  const wrap=$('#titleSceneWrap');
+  if(!wrap || wrap.childElementCount) return;
+  const clone=$('#scene').cloneNode(true);
+  clone.id='titleScene';
+  clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
+  wrap.appendChild(clone);
+  for(let i=0;i<12;i++){
+    const h=document.createElement('span');
+    h.className='heart'; h.textContent=pick(['💖','💗','✨']);
+    h.style.left=(4+rnd(92))+'%';
+    h.style.animationDelay=(rnd(50)/10)+'s';
+    h.style.animationDuration=(4+rnd(30)/10)+'s';
+    wrap.appendChild(h);
+  }
+  const fit=()=>{
+    const s=Math.max(1, innerWidth/375*1.04);
+    clone.style.transform=`translateX(-50%) scale(${s})`;
+  };
+  fit();
+  window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', ()=>setTimeout(fit,150));
+}
+
 /* 手机/横屏下实测可用空间，把合成板缩放到完整可见 */
 function visibleH(){
   // visualViewport 才是去掉地址栏/工具栏后真正看得见的高度
@@ -1250,6 +1289,7 @@ S=load()||freshState();
 })();
 renderTop(); renderEnergy(); renderGens(); renderBoard(); renderOrders(); renderScene(); renderSide();
 relayout();
+if(!S.intro) buildTitleBackdrop();
 if(S.intro) $('#titleScreen').style.display='none';
 </script>
 </body>
