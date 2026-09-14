@@ -302,19 +302,49 @@ main{
 @keyframes heartUp{0%{opacity:0; transform:translateY(20vh) scale(.6);}15%{opacity:.85;}
   100%{opacity:0; transform:translateY(-105vh) scale(1.15);}}
 
+/* ---------- 手机底部操作栏 ---------- */
+#mobileBar{
+  display:none; position:fixed; left:0; right:0; bottom:0; z-index:55;
+  gap:10px; padding:10px 14px; padding-bottom:calc(10px + env(safe-area-inset-bottom));
+  background:#1c0b16f2; backdrop-filter:blur(8px); border-top:1px solid #ffffff22;
+}
+.mb-btn{
+  flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+  padding:12px 8px; border-radius:14px; font-size:15px; font-weight:800; color:var(--text);
+  background:linear-gradient(180deg,#ffffff1c,#ffffff0a); border:1px solid #ffffff26;
+}
+.mb-btn .mb-badge{
+  background:#ff5f9e; color:#fff; border-radius:999px; padding:1px 8px; font-size:12px;
+}
+.mb-btn .mb-badge.gold{background:var(--gold2); color:#5a2a10;}
+.mb-btn .mb-badge.none{display:none;}
+.modal-body-scroll{max-height:64dvh; overflow:auto;}
+
 /* ---------- 窄屏 ---------- */
 @media (max-width:1080px){
   body{overflow:auto; overscroll-behavior-y:none;}
-  main{display:flex; flex-direction:column; overflow:visible;}
-  #rightPanel{order:1;} #centerPanel{order:2;} #leftPanel{order:3;}
-  #orders{flex-direction:row; overflow-x:auto; padding-bottom:4px;}
-  .order-card,.order-slot-empty{min-width:230px;}
+  main{display:flex; flex-direction:column; overflow:visible;
+    padding-bottom:calc(84px + env(safe-area-inset-bottom));}
+  #leftPanel,#rightPanel{display:none;}
+  #centerPanel{order:1;}
   #scene{height:200px;}
   .logo{font-size:16px; letter-spacing:1px;}
   .pill{padding:4px 10px; font-size:13px;}
   #energyWrap{min-width:128px;}
   .panel{padding:10px;}
   #gens{gap:6px;}
+  #mobileBar{display:flex;}
+}
+@media (max-width:1080px) and (orientation:landscape){
+  main{padding-bottom:calc(74px + env(safe-area-inset-bottom));}
+  #topbar{gap:6px; padding-top:calc(6px + env(safe-area-inset-top)); padding-bottom:6px;}
+  #btnShop{display:none;}
+  .gen{padding:5px 10px; min-width:58px;}
+  .gen .g-emoji{font-size:20px;}
+  #btnSell{display:none;}
+  .btn-row span{display:none;}
+  #centerPanel{gap:6px;}
+  #scene{height:150px;}
 }
 </style>
 </head>
@@ -387,6 +417,11 @@ main{
       <div id="orders"></div>
     </aside>
   </main>
+
+  <nav id="mobileBar">
+    <button class="mb-btn" id="mbOrders">📋 客人订单<span class="mb-badge" id="orderBadge">0</span></button>
+    <button class="mb-btn" id="mbDecor">🏠 我的餐厅<span class="mb-badge gold" id="decorBadge">0/8</span></button>
+  </nav>
 </div>
 
 <div id="dragGhost"></div>
@@ -462,6 +497,24 @@ main{
       <button class="btn small ghost" id="btnClearIn">清空</button>
     </div>
     <div style="margin-top:16px; text-align:right;"><button class="btn" data-close>关闭</button></div>
+  </div>
+</div>
+
+<!-- 手机端：订单弹窗 -->
+<div class="modal-mask" id="ordersModal">
+  <div class="modal">
+    <h2>📋 客人订单 <span style="font-size:12px;color:var(--dim);font-weight:400;">点击订单卡自动上菜</span></h2>
+    <div class="modal-body-scroll" id="ordersModalBody"></div>
+    <div style="margin-top:14px; text-align:right;"><button class="btn ghost" data-close>关闭</button></div>
+  </div>
+</div>
+
+<!-- 手机端：餐厅/装修弹窗 -->
+<div class="modal-mask" id="decorModal">
+  <div class="modal">
+    <h2>🏠 我的餐厅</h2>
+    <div class="modal-body-scroll" id="decorModalBody"></div>
+    <div style="margin-top:14px; text-align:right;"><button class="btn ghost" data-close>关闭</button></div>
   </div>
 </div>
 
@@ -840,6 +893,17 @@ function renderOrders(){
     wrap.appendChild(card);
   }
   wrap.scrollLeft=keepScroll;
+  updateOrderBadge();
+}
+function updateOrderBadge(){
+  const el=$('#orderBadge'); if(!el) return;
+  const n=S.orders.filter(o=>o && o.entries.some(en=>en.got<en.need)).length;
+  el.textContent=n;
+  el.classList.toggle('none', n===0);
+}
+function updateDecorBadge(){
+  const el=$('#decorBadge'); if(!el) return;
+  el.textContent=decorCount()+'/'+DECOR.length;
 }
 function fulfillOrder(slot, preferIdx){
   const o=S.orders[slot]; if(!o) return;
@@ -921,6 +985,7 @@ function renderTop(){
   $('#btnSell').textContent=sellMode?'❌ 退出出售':'💰 出售物品';
   $('#sellBanner').classList.toggle('show',sellMode);
   document.querySelector('#board').style.cursor=sellMode?'crosshair':'';
+  fitBoard();
 }
 function renderSide(){
   $('#uiDecorCount').textContent=decorCount()+' / '+DECOR.length;
@@ -929,6 +994,7 @@ function renderSide(){
   $('#uiNextGoal').innerHTML=next
     ?`<span style="font-size:20px;">${next.icon}</span><span>下一个心愿：<b>${next.name}</b>（${next.cost}⭐）</span>`
     :`<span style="font-size:20px;">🎉</span><span>全部装修完成，暖屋正式开业！继续招待客人吧～</span>`;
+  updateDecorBadge();
 }
 
 /* ================= 商店 ================= */
@@ -1065,6 +1131,42 @@ $('#btnRestore').addEventListener('click',()=>{
   SFX.star();
   toast('进度已恢复 ✓');
 });
+
+/* ---- 手机端：订单 / 餐厅弹窗 ---- */
+function isMobileLayout(){ return window.matchMedia('(max-width:1080px)').matches; }
+function relayout(){
+  const orders=$('#orders'), scene=$('#scene'), side=$('#sideInfo');
+  if(isMobileLayout()){
+    $('#ordersModalBody').appendChild(orders);
+    $('#decorModalBody').appendChild(scene);
+    $('#decorModalBody').appendChild(side);
+  }else{
+    const rp=$('#rightPanel'), lp=$('#leftPanel');
+    rp.appendChild(orders);
+    lp.appendChild(scene); lp.appendChild(side);
+  }
+  fitBoard();
+}
+$('#mbOrders').addEventListener('click',()=>{ renderOrders(); $('#ordersModal').classList.add('show'); });
+$('#mbDecor').addEventListener('click',()=>{ renderSide(); renderScene(); $('#decorModal').classList.add('show'); });
+window.addEventListener('resize', relayout);
+window.addEventListener('orientationchange', ()=>setTimeout(relayout,150));
+
+/* 手机/横屏下实测可用空间，把合成板缩放到完整可见 */
+function fitBoard(){
+  const bd=$('#board');
+  if(!isMobileLayout()){ bd.style.width=''; return; }
+  bd.style.width='100%';
+  const topH=$('#topbar').offsetHeight;
+  const barEl=$('#mobileBar');
+  const barH=isMobileLayout()?barEl.offsetHeight:0;
+  const chrome=$('#gens').offsetHeight + document.querySelector('.btn-row').offsetHeight
+    + (sellMode?46:0) + 52;
+  const availH=window.innerHeight - topH - barH - chrome;
+  const availW=document.documentElement.clientWidth - 28;
+  const w=Math.max(170, Math.min(availW, availH, 600));
+  bd.style.width=w+'px';
+}
 $('#btnMute').addEventListener('click',()=>{ S.muted=!S.muted; renderTop(); save(); });
 $('#btnSell').addEventListener('click',()=>{ sellMode=!sellMode; renderTop(); if(sellMode) toast('出售模式：点击物品换金币，价格约为价值的一半'); });
 $('#btnBuyEnergy').addEventListener('click',()=>{
@@ -1105,6 +1207,7 @@ S=load()||freshState();
   S.eTs=now;
 })();
 renderTop(); renderEnergy(); renderGens(); renderBoard(); renderOrders(); renderScene(); renderSide();
+relayout();
 if(S.intro) $('#titleScreen').style.display='none';
 </script>
 </body>
