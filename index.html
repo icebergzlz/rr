@@ -633,7 +633,8 @@ function freshState(){
     orders:[null,null,null], orderAt:[Date.now()+600,Date.now()+1400,Date.now()+2200],
     orderCd:[0,0,0], intro:false, ended:false, muted:false, served:0, seqC:0, lastCust:-1};
 }
-function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
+let resetting=false;
+function save(){ if(resetting) return; try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
 function load(){
   try{
     const raw=localStorage.getItem(SAVE_KEY);
@@ -1204,9 +1205,16 @@ $('#btnBuyEnergy').addEventListener('click',()=>{
   SFX.buy(); renderTop(); renderEnergy(); save();
 });
 $('#btnReset').addEventListener('click',()=>{
-  if(confirm('确定要清空所有进度、重新开始吗？')){
-    localStorage.removeItem(SAVE_KEY); location.reload();
+  const b=$('#btnReset');
+  if(!b.dataset.armed){
+    b.dataset.armed='1';
+    b.textContent='⚠️ 再点一次确认清空';
+    setTimeout(()=>{ if(b.dataset.armed){ delete b.dataset.armed; b.textContent='🗑️ 重置进度'; } },4000);
+    return;
   }
+  resetting=true;                       // 阻止刷新过程中的自动存档把旧进度写回
+  localStorage.removeItem(SAVE_KEY);
+  location.reload();
 });
 $('#btnStart').addEventListener('click',()=>{
   ac();
