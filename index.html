@@ -1169,6 +1169,11 @@ window.addEventListener('resize', relayout);
 window.addEventListener('orientationchange', ()=>setTimeout(relayout,150));
 
 /* 手机/横屏下实测可用空间，把合成板缩放到完整可见 */
+function visibleH(){
+  // visualViewport 才是去掉地址栏/工具栏后真正看得见的高度
+  if(window.visualViewport) return Math.round(window.visualViewport.height);
+  return window.innerHeight;
+}
 function fitBoard(){
   const bd=$('#board');
   if(!isMobileLayout()){ bd.style.width=''; return; }
@@ -1178,10 +1183,13 @@ function fitBoard(){
   const barH=isMobileLayout()?barEl.offsetHeight:0;
   const chrome=$('#gens').offsetHeight + document.querySelector('.btn-row').offsetHeight
     + (sellMode?46:0) + 52;
-  const availH=window.innerHeight - topH - barH - chrome;
+  const availH=visibleH() - topH - barH - chrome - 16;
   const availW=document.documentElement.clientWidth - 28;
-  const w=Math.max(170, Math.min(availW, availH, 600));
+  const w=Math.max(150, Math.min(availW, availH, 600));
   bd.style.width=w+'px';
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', fitBoard);
 }
 $('#btnMute').addEventListener('click',()=>{ S.muted=!S.muted; renderTop(); save(); });
 $('#btnSell').addEventListener('click',()=>{ sellMode=!sellMode; renderTop(); if(sellMode) toast('出售模式：点击物品换金币，价格约为价值的一半'); });
