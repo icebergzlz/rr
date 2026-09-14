@@ -328,11 +328,27 @@ main{
   #leftPanel,#rightPanel{display:none;}
   #centerPanel{order:1;}
   #scene{height:200px;}
-  .logo{font-size:16px; letter-spacing:1px;}
-  .pill{padding:4px 10px; font-size:13px;}
-  #energyWrap{min-width:128px;}
+  /* 顶栏精简：两行以内 */
+  #topbar{gap:6px; padding:6px 10px; padding-top:calc(6px + env(safe-area-inset-top));}
+  .logo{font-size:14px; letter-spacing:0;}
+  .pill{padding:4px 8px; font-size:12px;}
+  #energyWrap{min-width:118px;}
+  #btnBuyEnergy{padding:6px 9px; font-size:12px;}
+  #btnBuyEnergy small{display:none;}
+  #btnShop,#btnStoryList,#badgeOpen{display:none;}
+  .btn.small{padding:6px 9px;}
+  /* 生成器一排小芯片 */
+  #gens{flex-wrap:nowrap; overflow-x:auto; padding-bottom:2px; gap:6px; scrollbar-width:none;}
+  #gens::-webkit-scrollbar{display:none;}
+  .gen{flex:none; min-width:54px; padding:6px 6px 4px; border-radius:12px;}
+  .gen .g-emoji{font-size:22px;}
+  .gen .g-name{display:none;}
+  .gen .g-cost{font-size:11px;}
+  /* 操作行精简 */
+  .btn-row{margin-top:6px; gap:6px;}
+  .btn-row span{display:none;}
+  #btnSell{flex:1;}
   .panel{padding:10px;}
-  #gens{gap:6px;}
   #mobileBar{display:flex;}
 }
 @media (max-width:1080px) and (orientation:landscape){
@@ -1193,7 +1209,13 @@ function tick(){
   for(let s=0;s<3;s++){
     if(!S.orders[s] && now>=S.orderAt[s]){ genOrder(s); renderOrders(); save(); }
   }
+  // 视口尺寸变化兜底（部分环境不触发 resize 事件）
+  if(innerWidth!==tick.vw || innerHeight!==tick.vh){
+    tick.vw=innerWidth; tick.vh=innerHeight;
+    relayout();
+  }
 }
+tick.vw=innerWidth; tick.vh=innerHeight;
 setInterval(tick,1000);
 setInterval(save,5000);
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) save(); });
