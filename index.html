@@ -1260,7 +1260,7 @@ function fitBoard(){
   const chrome=$('#gens').offsetHeight + document.querySelector('.btn-row').offsetHeight
     + (sellMode?46:0) + 52;
   const availH=visibleH() - topH - barH - chrome - 16;
-  const availW=document.documentElement.clientWidth - 28;
+  const availW=(document.documentElement.clientWidth - 28)*0.85;   // 手机端格子再小一档
   const w=Math.max(150, Math.min(availW, availH, 600));
   bd.style.width=w+'px';
 }
