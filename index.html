@@ -315,28 +315,35 @@ main{
   100%{opacity:0; transform:translateY(-105vh) scale(1.15);}}
 
 /* ---------- 手机底部操作栏 ---------- */
-#mobileBar{
-  display:none; position:fixed; left:0; right:0; bottom:0; z-index:55;
-  gap:10px; padding:10px 14px; padding-bottom:calc(10px + env(safe-area-inset-bottom));
-  background:#1c0b16f2; backdrop-filter:blur(8px); border-top:1px solid #ffffff22;
-}
-.mb-btn{
-  flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
-  padding:12px 8px; border-radius:14px; font-size:15px; font-weight:800; color:var(--text);
-  background:linear-gradient(180deg,#ffffff1c,#ffffff0a); border:1px solid #ffffff26;
-}
-.mb-btn .mb-badge{
+.mb-badge{
   background:#ff5f9e; color:#fff; border-radius:999px; padding:1px 8px; font-size:12px;
 }
-.mb-btn .mb-badge.gold{background:var(--gold2); color:#5a2a10;}
-.mb-btn .mb-badge.none{display:none;}
+.mb-badge.gold{background:var(--gold2); color:#5a2a10;}
+#midRow{display:flex; align-items:center; gap:8px;}
+#midRow #gens{flex:1;}
+#mbDecor{display:none; align-items:center; gap:4px; flex:none;}
+#miniOrders{display:none;}
+.mini-order{
+  flex:none; min-width:104px; max-width:150px; padding:6px 8px; border-radius:12px;
+  background:var(--panel2); border:1px solid #ffffff1c; cursor:pointer;
+  display:flex; flex-direction:column; gap:4px; position:relative;
+}
+.mini-order.rich{border-color:#ffd96688;}
+.mini-order .mo-head{display:flex; align-items:center; gap:4px;}
+.mini-order .mo-ava{font-size:16px;}
+.mini-order .mo-name{font-size:10px; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.mini-order .mo-needs{display:flex; flex-wrap:wrap; gap:3px; font-size:13px; font-weight:800;}
+.mini-order .mo-needs .cnt{font-size:10px; color:var(--dim);}
+.mini-order .mo-needs .ok{opacity:.45; text-decoration:line-through;}
+.mini-order .mo-reward{font-size:10px; color:#ffd966; font-weight:800;}
+.mini-empty{font-size:11px; color:#ffffff55; align-self:center; padding:8px 4px;}
 .modal-body-scroll{max-height:64dvh; overflow:auto;}
 
 /* ---------- 窄屏 ---------- */
 @media (max-width:1080px){
   body{overflow:auto; overscroll-behavior-y:none;}
   main{display:flex; flex-direction:column; overflow:visible;
-    padding-bottom:calc(84px + env(safe-area-inset-bottom));}
+    padding-bottom:calc(12px + env(safe-area-inset-bottom));}
   #leftPanel,#rightPanel{display:none;}
   #centerPanel{order:1;}
   #scene{height:200px;}
@@ -375,13 +382,14 @@ main{
   .modal h2{font-size:16px; margin-bottom:10px;}
   #toasts{top:92px;}
   .toast{font-size:13px; padding:8px 14px;}
-  #mobileBar{display:flex; gap:8px; padding-top:8px; padding-bottom:calc(8px + env(safe-area-inset-bottom));}
-  .mb-btn{font-size:13px; padding:9px 6px;}
-  .mb-btn .mb-badge{font-size:11px; padding:1px 6px;}
+  #mobileBar{display:none;}
+  #mbDecor{display:inline-flex;}
+  #miniOrders{display:flex; overflow-x:auto; gap:6px; padding:2px 0 6px; scrollbar-width:none;}
+  #miniOrders::-webkit-scrollbar{display:none;}
   #board{margin:0;}
 }
 @media (max-width:1080px) and (orientation:landscape){
-  main{padding-bottom:calc(74px + env(safe-area-inset-bottom));}
+  main{padding-bottom:calc(12px + env(safe-area-inset-bottom));}
   #topbar{gap:6px; padding-top:calc(6px + env(safe-area-inset-top)); padding-bottom:6px;}
   #btnShop{display:none;}
   .gen{padding:5px 10px; min-width:58px;}
@@ -446,9 +454,13 @@ main{
     </aside>
 
     <section class="panel" id="centerPanel">
-      <div id="gens"></div>
+      <div id="midRow">
+        <div id="gens"></div>
+        <button class="btn small ghost" id="mbDecor" title="餐厅与装修">🏠 餐厅<span class="mb-badge gold" id="decorBadge">0/8</span></button>
+      </div>
       <div id="sellBanner">💰 出售模式：点击合成板上的物品换成金币（再次点击下方按钮退出）</div>
       <div id="board"></div>
+      <div id="miniOrders"></div>
       <div class="btn-row">
         <button class="btn small ghost" id="btnSell">💰 出售物品</button>
         <span style="font-size:12px;color:var(--dim);align-self:center;">
@@ -462,11 +474,6 @@ main{
       <div id="orders"></div>
     </aside>
   </main>
-
-  <nav id="mobileBar">
-    <button class="mb-btn" id="mbOrders">📋 客人订单<span class="mb-badge" id="orderBadge">0</span></button>
-    <button class="mb-btn" id="mbDecor">🏠 我的餐厅<span class="mb-badge gold" id="decorBadge">0/8</span></button>
-  </nav>
 </div>
 
 <div id="dragGhost"></div>
@@ -542,15 +549,6 @@ main{
       <button class="btn small ghost" id="btnClearIn">清空</button>
     </div>
     <div style="margin-top:16px; text-align:right;"><button class="btn" data-close>关闭</button></div>
-  </div>
-</div>
-
-<!-- 手机端：订单弹窗 -->
-<div class="modal-mask" id="ordersModal">
-  <div class="modal">
-    <h2>📋 客人订单 <span style="font-size:12px;color:var(--dim);font-weight:400;">点击订单卡自动上菜</span></h2>
-    <div class="modal-body-scroll" id="ordersModalBody"></div>
-    <div style="margin-top:14px; text-align:right;"><button class="btn ghost" data-close>关闭</button></div>
   </div>
 </div>
 
@@ -941,13 +939,38 @@ function renderOrders(){
     wrap.appendChild(card);
   }
   wrap.scrollLeft=keepScroll;
-  updateOrderBadge();
+  renderMiniOrders();
 }
-function updateOrderBadge(){
-  const el=$('#orderBadge'); if(!el) return;
-  const n=S.orders.filter(o=>o && o.entries.some(en=>en.got<en.need)).length;
-  el.textContent=n;
-  el.classList.toggle('none', n===0);
+function renderMiniOrders(){
+  const wrap=$('#miniOrders'); if(!wrap) return;
+  wrap.innerHTML='';
+  if(!isMobileLayout()) return;
+  let any=false;
+  for(let s=0;s<3;s++){
+    const o=S.orders[s];
+    if(!o) continue;
+    any=true;
+    const card=document.createElement('div');
+    card.className='mini-order'+(o.rich?' rich':'');
+    card.dataset.slot=s;
+    const needs=o.entries.map(en=>{
+      const d=CHAIN[en.c].items[en.l-1];
+      const done=en.got>=en.need;
+      return `<span class="${done?'ok':''}">${d.e}<span class="cnt">×${done?0:en.need-en.got}</span></span>`;
+    }).join('');
+    card.innerHTML=`
+      <div class="mo-head"><span class="mo-ava">${o.cust.e}</span><span class="mo-name">${o.cust.n}</span></div>
+      <div class="mo-needs">${needs}</div>
+      <div class="mo-reward">🪙${o.coins} ⭐${o.stars}</div>`;
+    card.addEventListener('click',()=>fulfillOrder(s));
+    wrap.appendChild(card);
+  }
+  if(!any){
+    const e=document.createElement('div');
+    e.className='mini-empty'; e.textContent='⏳ 等待客人入座…';
+    wrap.appendChild(e);
+  }
+  fitBoard();
 }
 function updateDecorBadge(){
   const el=$('#decorBadge'); if(!el) return;
@@ -1200,22 +1223,19 @@ $('#btnRestore').addEventListener('click',()=>{
   toast('✅ 进度已恢复，欢迎回来！');
 });
 
-/* ---- 手机端：订单 / 餐厅弹窗 ---- */
+/* ---- 手机端：餐厅弹窗 / 布局 ---- */
 function isMobileLayout(){ return window.matchMedia('(max-width:1080px)').matches; }
 function relayout(){
-  const orders=$('#orders'), scene=$('#scene'), side=$('#sideInfo');
+  const scene=$('#scene'), side=$('#sideInfo');
   if(isMobileLayout()){
-    $('#ordersModalBody').appendChild(orders);
     $('#decorModalBody').appendChild(scene);
     $('#decorModalBody').appendChild(side);
   }else{
-    const rp=$('#rightPanel'), lp=$('#leftPanel');
-    rp.appendChild(orders);
+    const lp=$('#leftPanel');
     lp.appendChild(scene); lp.appendChild(side);
   }
   fitBoard();
 }
-$('#mbOrders').addEventListener('click',()=>{ renderOrders(); $('#ordersModal').classList.add('show'); });
 $('#mbDecor').addEventListener('click',()=>{ renderSide(); renderScene(); $('#decorModal').classList.add('show'); });
 window.addEventListener('resize', relayout);
 window.addEventListener('orientationchange', ()=>setTimeout(relayout,150));
@@ -1256,12 +1276,11 @@ function fitBoard(){
   if(!isMobileLayout()){ bd.style.width=''; return; }
   bd.style.width='100%';
   const topH=$('#topbar').offsetHeight;
-  const barEl=$('#mobileBar');
-  const barH=isMobileLayout()?barEl.offsetHeight:0;
-  const chrome=$('#gens').offsetHeight + document.querySelector('.btn-row').offsetHeight
-    + (sellMode?46:0) + 52;
-  const availH=visibleH() - topH - barH - chrome - 16;
-  const availW=(document.documentElement.clientWidth - 28)*0.85;   // 手机端格子再小一档
+  const chrome=$('#midRow').offsetHeight + $('#miniOrders').offsetHeight
+    + document.querySelector('.btn-row').offsetHeight
+    + (sellMode?46:0) + 40;
+  const availH=visibleH() - topH - chrome;
+  const availW=document.documentElement.clientWidth - 28;
   const w=Math.max(150, Math.min(availW, availH, 600));
   bd.style.width=w+'px';
 }
