@@ -1299,7 +1299,7 @@ function fitBoard(){
     + document.querySelector('.btn-row').offsetHeight
     + (sellMode?46:0) + 40;
   const availH=visibleH() - topH - chrome;
-  const availW=document.documentElement.clientWidth - 28;
+  const availW=bd.getBoundingClientRect().width - 2;   // 实测容器内容宽，留 2px 余量
   const w=Math.max(150, Math.min(availW, availH, 600));
   bd.style.width=w+'px';
 }
