@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#2b1220">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -25,6 +25,7 @@ body{
   background:radial-gradient(1200px 700px at 70% -10%, #6b2b4d 0%, transparent 60%),
              linear-gradient(160deg, var(--bg1), var(--bg2));
   overflow:hidden;
+  touch-action:manipulation;
 }
 button{font-family:inherit; cursor:pointer; border:none;}
 ::-webkit-scrollbar{width:8px;height:8px;}
@@ -34,8 +35,10 @@ button{font-family:inherit; cursor:pointer; border:none;}
 
 /* ---------- 顶栏 ---------- */
 #topbar{
-  display:flex; align-items:center; gap:10px; padding:10px 14px;
+  display:flex; align-items:center; gap:10px;
+  padding:10px 14px; padding-top:calc(10px + env(safe-area-inset-top));
   background:#00000038; backdrop-filter:blur(6px); flex-wrap:wrap;
+  position:sticky; top:0; z-index:60;
 }
 .logo{font-size:20px; font-weight:900; letter-spacing:2px; white-space:nowrap;
   background:linear-gradient(90deg,#ffd9e8,var(--gold));
@@ -65,7 +68,8 @@ button{font-family:inherit; cursor:pointer; border:none;}
 /* ---------- 主布局 ---------- */
 main{
   flex:1; display:grid; grid-template-columns:290px minmax(400px,1fr) 320px;
-  gap:12px; padding:0 14px 14px; min-height:0;
+  gap:12px; padding:0 14px; padding-bottom:calc(14px + env(safe-area-inset-bottom));
+  min-height:0;
 }
 .panel{
   background:var(--panel); border:1px solid #ffffff14; border-radius:16px;
@@ -145,6 +149,7 @@ main{
   position:absolute; inset:3px; border-radius:10px;
   display:flex; align-items:center; justify-content:center;
   font-size:clamp(16px,4.2vmin,30px); cursor:grab; transition:transform .12s, box-shadow .12s;
+  -webkit-touch-callout:none; -webkit-user-select:none; user-select:none;
 }
 .item .lv{
   position:absolute; top:-4px; right:-4px; font-size:10px; font-weight:900;
@@ -248,6 +253,20 @@ main{
   border-radius:12px; padding:10px 14px; text-align:left; font-size:14px; font-weight:700;}
 .help-list{line-height:1.9; font-size:14px; color:var(--text);}
 .help-list b{color:var(--gold);}
+.bk-hint{font-size:12px; color:var(--dim); line-height:1.8; margin:6px 0 4px;}
+.bk-step{font-size:13px; font-weight:800; color:var(--gold); margin:16px 0 6px;}
+.ta{
+  width:100%; min-height:96px; background:#00000042; color:var(--text);
+  border:1px solid #ffffff26; border-radius:10px; padding:8px;
+  font-size:11px; line-height:1.5; font-family:ui-monospace,Menlo,Consolas,monospace;
+  word-break:break-all; resize:vertical; user-select:text; -webkit-user-select:text;
+}
+@media (pointer:coarse){
+  .btn{padding-top:9px; padding-bottom:9px;}
+  .btn.small{padding-top:7px; padding-bottom:7px;}
+  .oc-refresh{width:32px; height:32px; font-size:15px;}
+  .gen{min-width:80px; padding:10px 14px;}
+}
 
 /* ---------- 剧情对话 ---------- */
 #storyModal{z-index:500;}
@@ -285,13 +304,17 @@ main{
 
 /* ---------- 窄屏 ---------- */
 @media (max-width:1080px){
-  body{overflow:auto;}
+  body{overflow:auto; overscroll-behavior-y:none;}
   main{display:flex; flex-direction:column; overflow:visible;}
   #rightPanel{order:1;} #centerPanel{order:2;} #leftPanel{order:3;}
   #orders{flex-direction:row; overflow-x:auto; padding-bottom:4px;}
   .order-card,.order-slot-empty{min-width:230px;}
   #scene{height:200px;}
   .logo{font-size:16px; letter-spacing:1px;}
+  .pill{padding:4px 10px; font-size:13px;}
+  #energyWrap{min-width:128px;}
+  .panel{padding:10px;}
+  #gens{gap:6px;}
 }
 </style>
 </head>
@@ -313,6 +336,7 @@ main{
     <span class="badge-open" id="badgeOpen">🎉 开业大吉</span>
     <button class="btn small" id="btnShop">🛠️ 装修商店</button>
     <button class="btn small ghost" id="btnStoryList">📖 剧情</button>
+    <button class="btn small ghost" id="btnBackup" title="备份 / 恢复进度">💾</button>
     <button class="btn small ghost" id="btnHelp">❓</button>
     <button class="btn small ghost" id="btnMute">🔊</button>
   </header>
@@ -397,6 +421,7 @@ main{
       <b>📋 完成订单</b>：客人会点名要特定等级的食材，点击订单卡即可自动上菜，获得金币与星星。高级订单（金框）奖励更丰厚。<br>
       <b>🛠️ 装修餐厅</b>：用星星在装修商店里升级餐厅，每完成一项装修都会推进「暖屋物语」的剧情，还能解锁新的生成器与菜系。<br>
       <b>💰 出售物品</b>：合成板满了？开启出售模式，把多余食材换成金币。<br>
+      <b>💾 备份进度</b>：点顶栏 💾 按钮导出备份码，用微信「文件传输助手」发给自己保存；换手机或清缓存后，粘贴备份码即可恢复（不上传任何服务器）。<br>
       <b>💾 自动存档</b>：进度自动保存在浏览器中，体力离线也会恢复。祝你把「暖屋」变成全城最浪漫的餐厅！
     </div>
     <div style="margin-top:16px; display:flex; justify-content:space-between;">
@@ -417,6 +442,26 @@ main{
       </div>
     </div>
     <div class="story-next">点击继续 ▸</div>
+  </div>
+</div>
+
+<!-- 备份 / 恢复 -->
+<div class="modal-mask" id="backupModal">
+  <div class="modal">
+    <h2>💾 备份 / 恢复进度</h2>
+    <div class="bk-hint">
+      备份码就是你的存档本体，<b style="color:var(--pink);">不会上传到任何服务器</b>——把它用微信「文件传输助手」或备忘录保存好，换手机、清缓存后粘贴回来即可恢复。
+    </div>
+    <div class="bk-step">① 导出备份码</div>
+    <textarea class="ta" id="backupOut" readonly spellcheck="false"></textarea>
+    <div style="margin-top:8px;"><button class="btn small" id="btnCopyBackup">📋 复制备份码</button></div>
+    <div class="bk-step">② 粘贴备份码恢复</div>
+    <textarea class="ta" id="backupIn" placeholder="把之前保存的备份码粘贴到这里" spellcheck="false"></textarea>
+    <div style="margin-top:8px; display:flex; gap:8px;">
+      <button class="btn small" id="btnRestore">📥 恢复进度</button>
+      <button class="btn small ghost" id="btnClearIn">清空</button>
+    </div>
+    <div style="margin-top:16px; text-align:right;"><button class="btn" data-close>关闭</button></div>
   </div>
 </div>
 
@@ -760,7 +805,7 @@ function genOrder(slot){
     entries, coins, stars, rich};
 }
 function renderOrders(){
-  const wrap=$('#orders'); wrap.innerHTML='';
+  const wrap=$('#orders'); const keepScroll=wrap.scrollLeft; wrap.innerHTML='';
   for(let s=0;s<3;s++){
     const o=S.orders[s];
     if(!o){
@@ -794,6 +839,7 @@ function renderOrders(){
     card.addEventListener('click',()=>fulfillOrder(s));
     wrap.appendChild(card);
   }
+  wrap.scrollLeft=keepScroll;
 }
 function fulfillOrder(slot, preferIdx){
   const o=S.orders[slot]; if(!o) return;
@@ -967,6 +1013,58 @@ $('#btnStoryList').addEventListener('click',()=>{
   $('#storyListModal').classList.add('show');
 });
 $('#btnHelp').addEventListener('click',()=>$('#helpModal').classList.add('show'));
+/* ---- 备份 / 恢复 ---- */
+const BK_PREFIX='RZ1.';
+function encodeSave(){
+  return BK_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+}
+function decodeSave(code){
+  code=(code||'').replace(/\s+/g,'');
+  if(!code.startsWith(BK_PREFIX)) return null;
+  try{
+    const d=JSON.parse(decodeURIComponent(escape(atob(code.slice(BK_PREFIX.length)))));
+    if(!d || d.v!==1 || !Array.isArray(d.board) || d.board.length!==N) return null;
+    if(!Array.isArray(d.orders) || d.orders.length!==3) return null;
+    if(!Array.isArray(d.orderAt) || d.orderAt.length!==3) d.orderAt=[Date.now(),Date.now()+1000,Date.now()+2000];
+    if(!Array.isArray(d.orderCd) || d.orderCd.length!==3) d.orderCd=[0,0,0];
+    d.sel=-1;
+    d.energy=Math.max(0,Math.min(EMAX,+d.energy||0));
+    return d;
+  }catch(e){ return null; }
+}
+$('#btnBackup').addEventListener('click',()=>{
+  $('#backupOut').value=encodeSave();
+  $('#backupIn').value='';
+  $('#backupModal').classList.add('show');
+});
+$('#btnClearIn').addEventListener('click',()=>{ $('#backupIn').value=''; });
+$('#btnCopyBackup').addEventListener('click',()=>{
+  const ta=$('#backupOut'); const text=ta.value;
+  const fallback=()=>{ ta.focus(); ta.select(); let ok=false;
+    try{ ok=!!(document.execCommand&&document.execCommand('copy')); }catch(e){}
+    ta.blur(); window.getSelection&&window.getSelection().removeAllRanges(); return ok; };
+  const done=ok=>toast(ok?'备份码已复制，发给文件传输助手保存吧':'复制失败，请长按文本框手动全选复制');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>done(true),()=>done(fallback()));
+  } else done(fallback());
+});
+$('#btnRestore').addEventListener('click',()=>{
+  const d=decodeSave($('#backupIn').value);
+  if(!d){ toast('备份码无效，检查一下是否完整粘贴？'); SFX.err(); return; }
+  if(!confirm('确定用备份码覆盖当前进度吗？当前进度将被替换。')) return;
+  const now=Date.now();
+  S=d;
+  S.energy=Math.min(EMAX, S.energy+Math.max(0,now-(S.eTs||now))/REGEN_MS);
+  S.eTs=now;
+  if(fwTimer){ clearInterval(fwTimer); fwTimer=null; }
+  storyQueue.length=0; storyLine=null;
+  sellMode=false;
+  closeModals();
+  renderTop(); renderEnergy(); renderGens(); renderBoard(); renderOrders(); renderScene(); renderSide();
+  save();
+  SFX.star();
+  toast('进度已恢复 ✓');
+});
 $('#btnMute').addEventListener('click',()=>{ S.muted=!S.muted; renderTop(); save(); });
 $('#btnSell').addEventListener('click',()=>{ sellMode=!sellMode; renderTop(); if(sellMode) toast('出售模式：点击物品换金币，价格约为价值的一半'); });
 $('#btnBuyEnergy').addEventListener('click',()=>{
