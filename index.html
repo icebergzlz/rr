@@ -216,7 +216,7 @@ main{
 .float-txt.coin{color:#ffd966;} .float-txt.star{color:#fff3a0; font-size:19px;}
 .float-txt.love{color:#ff9db8;}
 @keyframes floatFade{0%{opacity:0; transform:translateY(6px);}20%{opacity:1;}100%{opacity:0; transform:translateY(-44px);}}
-#toasts{position:fixed; top:60px; left:50%; transform:translateX(-50%); z-index:300;
+#toasts{position:fixed; top:60px; left:50%; transform:translateX(-50%); z-index:650;
   display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none;}
 .toast{
   background:#000000cc; border:1px solid #ffffff30; color:var(--text);
@@ -341,27 +341,43 @@ main{
   #centerPanel{order:1;}
   #scene{height:200px;}
   /* 顶栏精简：两行以内 */
-  #topbar{gap:6px; padding:6px 10px; padding-top:calc(6px + env(safe-area-inset-top));}
-  .logo{font-size:14px; letter-spacing:0;}
-  .pill{padding:4px 8px; font-size:12px;}
-  #energyWrap{min-width:118px;}
-  #btnBuyEnergy{padding:6px 9px; font-size:12px;}
+  #topbar{gap:5px; padding:5px 8px; padding-top:calc(5px + env(safe-area-inset-top));}
+  .logo{font-size:13px; letter-spacing:0;}
+  .pill{padding:3px 7px; font-size:11px;}
+  #energyWrap{min-width:106px;}
+  #btnBuyEnergy{padding:5px 7px; font-size:11px;}
   #btnBuyEnergy small{display:none;}
   #btnShop,#btnStoryList,#badgeOpen{display:none;}
-  .btn.small{padding:6px 9px;}
+  .btn.small{padding:5px 8px; font-size:12px;}
   /* 生成器一排小芯片 */
-  #gens{flex-wrap:nowrap; overflow-x:auto; padding-bottom:2px; gap:6px; scrollbar-width:none;}
+  #gens{flex-wrap:nowrap; overflow-x:auto; padding-bottom:2px; gap:5px; scrollbar-width:none;}
   #gens::-webkit-scrollbar{display:none;}
-  .gen{flex:none; min-width:54px; padding:6px 6px 4px; border-radius:12px;}
-  .gen .g-emoji{font-size:22px;}
+  .gen{flex:none; min-width:46px; padding:5px 5px 3px; border-radius:11px;}
+  .gen .g-emoji{font-size:19px;}
   .gen .g-name{display:none;}
-  .gen .g-cost{font-size:11px;}
+  .gen .g-cost{font-size:10px;}
   /* 操作行精简 */
-  .btn-row{margin-top:6px; gap:6px;}
+  .btn-row{margin-top:5px; gap:6px;}
   .btn-row span{display:none;}
-  #btnSell{flex:1;}
-  .panel{padding:10px;}
-  #mobileBar{display:flex;}
+  #btnSell{flex:1; font-size:12px;}
+  .panel{padding:8px;}
+  /* 订单卡紧凑 */
+  .order-card{padding:8px 9px;}
+  .oc-avatar{width:30px; height:30px; font-size:17px;}
+  .oc-name{font-size:13px;}
+  .oc-talk{font-size:10px;}
+  .need{padding:2px 6px; font-size:12px;}
+  .need .cnt{font-size:10px;}
+  .oc-reward{font-size:11px;}
+  .oc-refresh{width:28px; height:28px; font-size:13px;}
+  /* 弹窗紧凑 */
+  .modal{padding:14px;}
+  .modal h2{font-size:16px; margin-bottom:10px;}
+  #toasts{top:92px;}
+  .toast{font-size:13px; padding:8px 14px;}
+  #mobileBar{display:flex; gap:8px; padding-top:8px; padding-bottom:calc(8px + env(safe-area-inset-bottom));}
+  .mb-btn{font-size:13px; padding:9px 6px;}
+  .mb-btn .mb-badge{font-size:11px; padding:1px 6px;}
 }
 @media (max-width:1080px) and (orientation:landscape){
   main{padding-bottom:calc(74px + env(safe-area-inset-bottom));}
@@ -1137,22 +1153,38 @@ $('#btnBackup').addEventListener('click',()=>{
   $('#backupOut').value=encodeSave();
   $('#backupIn').value='';
   $('#backupModal').classList.add('show');
+  toast('💾 备份码已生成，点「复制」后发给文件传输助手保存');
 });
 $('#btnClearIn').addEventListener('click',()=>{ $('#backupIn').value=''; });
 $('#btnCopyBackup').addEventListener('click',()=>{
-  const ta=$('#backupOut'); const text=ta.value;
+  const ta=$('#backupOut'), btn=$('#btnCopyBackup');
+  const text=ta.value, old=btn.textContent;
+  const flash=ok=>{
+    btn.textContent=ok?'✅ 已复制':'❌ 复制失败';
+    setTimeout(()=>{ btn.textContent=old; },2200);
+  };
   const fallback=()=>{ ta.focus(); ta.select(); let ok=false;
     try{ ok=!!(document.execCommand&&document.execCommand('copy')); }catch(e){}
     ta.blur(); window.getSelection&&window.getSelection().removeAllRanges(); return ok; };
-  const done=ok=>toast(ok?'备份码已复制，发给文件传输助手保存吧':'复制失败，请长按文本框手动全选复制');
+  const done=ok=>{
+    flash(ok);
+    toast(ok?'✅ 备份码已复制，快发给文件传输助手保存吧':'❌ 复制失败，请长按文本框手动全选复制');
+  };
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(()=>done(true),()=>done(fallback()));
   } else done(fallback());
 });
 $('#btnRestore').addEventListener('click',()=>{
+  const b=$('#btnRestore');
   const d=decodeSave($('#backupIn').value);
-  if(!d){ toast('备份码无效，检查一下是否完整粘贴？'); SFX.err(); return; }
-  if(!confirm('确定用备份码覆盖当前进度吗？当前进度将被替换。')) return;
+  if(!d){ toast('❌ 备份码无效，检查一下是否完整粘贴？'); SFX.err(); return; }
+  if(!b.dataset.armed){
+    b.dataset.armed='1';
+    b.textContent='⚠️ 再点一次，覆盖当前进度';
+    setTimeout(()=>{ if(b.dataset.armed){ delete b.dataset.armed; b.textContent='📥 恢复进度'; } },4000);
+    return;
+  }
+  delete b.dataset.armed; b.textContent='📥 恢复进度';
   const now=Date.now();
   S=d;
   S.energy=Math.min(EMAX, S.energy+Math.max(0,now-(S.eTs||now))/REGEN_MS);
@@ -1164,7 +1196,7 @@ $('#btnRestore').addEventListener('click',()=>{
   renderTop(); renderEnergy(); renderGens(); renderBoard(); renderOrders(); renderScene(); renderSide();
   save();
   SFX.star();
-  toast('进度已恢复 ✓');
+  toast('✅ 进度已恢复，欢迎回来！');
 });
 
 /* ---- 手机端：订单 / 餐厅弹窗 ---- */
